@@ -59,6 +59,13 @@
             android:widgetLayout="@layout/view_switch" />
         <CheckBoxPreference
             android:defaultValue="false"
+            android:key="pref_key_super_emoji"
+            android:layout="@layout/list_item_preference"
+            android:summary="@string/pref_super_emoji_summary"
+            android:title="@string/pref_super_emoji"
+            android:widgetLayout="@layout/view_switch" />
+        <CheckBoxPreference
+            android:defaultValue="false"
             android:key="pref_key_markdown_enabled"
             android:layout="@layout/list_item_preference"
             android:summary="@string/pref_markdown_enabled_summary"

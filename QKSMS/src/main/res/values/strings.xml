@@ -174,6 +174,8 @@
     <string name="pref_mobile_only_summary">Only show mobile numbers in contact suggestions</string>
     <string name="pref_auto_emoji">Automatic emoji</string>
     <string name="pref_auto_emoji_summary">Replace text with image emoji</string>
+    <string name="pref_super_emoji">Super emoji</string>
+    <string name="pref_super_emoji_summary">Make emoji-only messages bigger!</string>
     <string name="pref_enter_button">Enter button</string>
     <string name="pref_enter_button_summary">Tap to change keyboard enter button behavior</string>
     <string name="pref_compose_group">Group messaging</string>

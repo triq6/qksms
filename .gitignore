@@ -1,5 +1,8 @@
 # Built application files
 build/
+
+# Android Studio / ADB captures
+captures/
  
 # Crashlytics configuations
 com_crashlytics_export_strings.xml

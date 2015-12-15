@@ -91,6 +91,7 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
     public static final String HIDE_AVATAR_SENT = "pref_key_hide_avatar_sent";
     public static final String HIDE_AVATAR_RECEIVED = "pref_key_hide_avatar_received";
     public static final String AUTO_EMOJI = "pref_key_auto_emoji";
+    public static final String SUPER_EMOJI = "pref_key_super_emoji";
     public static final String MARKDOWN_ENABLED = "pref_key_markdown_enabled";
     public static final String ENTER_BUTTON = "pref_key_enter_button";
     public static final String COMPOSE_FAVORITES = "pref_key_compose_favorites";

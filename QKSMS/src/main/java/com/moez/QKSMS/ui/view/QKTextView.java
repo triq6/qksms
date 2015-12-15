@@ -3,13 +3,16 @@ package com.moez.QKSMS.ui.view;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.text.Layout;
 import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.widget.TextView;
+
 import com.moez.QKSMS.R;
 import com.moez.QKSMS.common.FontManager;
 import com.moez.QKSMS.common.LiveViewManager;
@@ -19,12 +22,16 @@ import com.moez.QKSMS.interfaces.LiveView;
 import com.moez.QKSMS.ui.ThemeManager;
 import com.moez.QKSMS.ui.settings.SettingsFragment;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class QKTextView extends TextView implements LiveView {
     private final String TAG = "QKTextView";
 
     private Context mContext;
     private int mType = FontManager.TEXT_TYPE_PRIMARY;
     private boolean mOnColorBackground = false;
+    private boolean isEmojiMessage = false;
 
     public QKTextView(Context context) {
         super(context);
@@ -93,7 +100,7 @@ public class QKTextView extends TextView implements LiveView {
                 int w = Math.round(textRealMaxWidth);
                 if (w < getMeasuredWidth()) {
                     super.onMeasure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.AT_MOST),
-                            heightMeasureSpec);
+                        heightMeasureSpec);
                 }
             }
         }
@@ -109,7 +116,7 @@ public class QKTextView extends TextView implements LiveView {
                     setTextColor(ThemeManager.getTextOnColorPrimary());
                     setLinkTextColor(ThemeManager.getTextOnColorPrimary());
                 } else if (mType == FontManager.TEXT_TYPE_SECONDARY ||
-                        mType == FontManager.TEXT_TYPE_TERTIARY) {
+                    mType == FontManager.TEXT_TYPE_TERTIARY) {
                     setTextColor(ThemeManager.getTextOnColorSecondary());
                 }
             } else {
@@ -117,7 +124,7 @@ public class QKTextView extends TextView implements LiveView {
                     setTextColor(ThemeManager.getTextOnBackgroundPrimary());
                     setLinkTextColor(ThemeManager.getColor());
                 } else if (mType == FontManager.TEXT_TYPE_SECONDARY ||
-                        mType == FontManager.TEXT_TYPE_TERTIARY) {
+                    mType == FontManager.TEXT_TYPE_TERTIARY) {
                     setTextColor(ThemeManager.getTextOnBackgroundSecondary());
                 }
             }
@@ -136,6 +143,31 @@ public class QKTextView extends TextView implements LiveView {
 
         if (mType == FontManager.TEXT_TYPE_DIALOG_BUTTON) {
             text = text.toString().toUpperCase();
+        }
+
+        // Make emojis BIGGER! If setting is enabled
+        if (prefs.getBoolean(SettingsFragment.SUPER_EMOJI, false)) {
+            this.isEmojiMessage = false;
+            // Only do this for "PRIMARY" text (i.e. in the main conversation view)
+            if (mType == FontManager.TEXT_TYPE_PRIMARY) {
+                float oTextSize = FontManager.getTextSize(mContext, mType);
+                // Emoji register as either one or two characters, so try to parse if the whole text is <= 2 chars
+                if (text.length() <= 2) {
+                    String emojiRegex = "([\\u20a0-\\u32ff\\ud83c\\udc00-\\ud83d\\udeff\\udbb9\\udce5-\\udbb9\\udcee])";
+                    Matcher matcher = Pattern.compile(emojiRegex).matcher(text);
+                    if (matcher.find()) {
+                        this.isEmojiMessage = true;
+                    }
+                }
+
+                if (this.isEmojiMessage) {
+                    Log.v(TAG, "Emoji-Only message detected! Content: '" + text + "'; make it super-sized!");
+                    super.setTextSize(TypedValue.COMPLEX_UNIT_SP, oTextSize * 3);
+                    super.setBackgroundColor(Color.argb(0, 0, 0, 0));
+                } else {
+                    super.setTextSize(TypedValue.COMPLEX_UNIT_SP, oTextSize);
+                }
+            }
         }
 
         if (prefs.getBoolean(SettingsFragment.MARKDOWN_ENABLED, false)) {
@@ -162,11 +194,14 @@ public class QKTextView extends TextView implements LiveView {
         // Typeface
         int fontFamily = FontManager.getFontFamily(mContext);
         int fontWeight = FontManager.getFontWeight(mContext, FontManager.getIsFontHeavy(mType));
-        setTypeface(TypefaceManager.obtainTypeface(mContext, fontFamily, fontWeight
-        ));
+        setTypeface(TypefaceManager.obtainTypeface(mContext, fontFamily, fontWeight));
 
         // Text size and color
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, FontManager.getTextSize(mContext, mType));
+        float fontSize = FontManager.getTextSize(mContext, mType);
+        if (this.isEmojiMessage) {
+            fontSize = fontSize * 3;
+        }
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
         setTextColor(FontManager.getTextColor(mContext, mType));
 
         // Markdown support enabled

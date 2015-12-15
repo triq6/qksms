@@ -60,6 +60,9 @@
         android:key="pref_key_auto_emoji" />
     <Preference
         android:defaultValue="true"
+        android:key="pref_key_super_emoji" />
+    <Preference
+        android:defaultValue="true"
         android:key="pref_key_compose_favorites" />
     <Preference
         android:defaultValue="false"
