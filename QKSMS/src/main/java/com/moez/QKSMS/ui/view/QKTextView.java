@@ -17,13 +17,11 @@ import com.moez.QKSMS.R;
 import com.moez.QKSMS.common.FontManager;
 import com.moez.QKSMS.common.LiveViewManager;
 import com.moez.QKSMS.common.TypefaceManager;
+import com.moez.QKSMS.common.utils.EmojiUtils;
 import com.moez.QKSMS.common.utils.MessageUtils;
 import com.moez.QKSMS.interfaces.LiveView;
 import com.moez.QKSMS.ui.ThemeManager;
 import com.moez.QKSMS.ui.settings.SettingsFragment;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class QKTextView extends TextView implements LiveView {
     private final String TAG = "QKTextView";
@@ -32,6 +30,7 @@ public class QKTextView extends TextView implements LiveView {
     private int mType = FontManager.TEXT_TYPE_PRIMARY;
     private boolean mOnColorBackground = false;
     private boolean isEmojiMessage = false;
+    private int superEmojiScale = 3; // TODO make this a setting? between 2 and 4 is reasonable (m, l, xl)
 
     public QKTextView(Context context) {
         super(context);
@@ -138,35 +137,23 @@ public class QKTextView extends TextView implements LiveView {
 
     @Override
     public void setText(CharSequence text, BufferType type) {
-
+        // Reset this or all text following big emoji will also be big
+        this.isEmojiMessage = false;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         if (mType == FontManager.TEXT_TYPE_DIALOG_BUTTON) {
             text = text.toString().toUpperCase();
         }
 
-        // Make emojis BIGGER! If setting is enabled
-        if (prefs.getBoolean(SettingsFragment.SUPER_EMOJI, false)) {
-            this.isEmojiMessage = false;
-            // Only do this for "PRIMARY" text (i.e. in the main conversation view)
-            if (mType == FontManager.TEXT_TYPE_PRIMARY) {
-                float oTextSize = FontManager.getTextSize(mContext, mType);
-                // Emoji register as either one or two characters, so try to parse if the whole text is <= 2 chars
-                if (text.length() <= 2) {
-                    String emojiRegex = "([\\u20a0-\\u32ff\\ud83c\\udc00-\\ud83d\\udeff\\udbb9\\udce5-\\udbb9\\udcee])";
-                    Matcher matcher = Pattern.compile(emojiRegex).matcher(text);
-                    if (matcher.find()) {
-                        this.isEmojiMessage = true;
-                    }
-                }
-
-                if (this.isEmojiMessage) {
-                    Log.v(TAG, "Emoji-Only message detected! Content: '" + text + "'; make it super-sized!");
-                    super.setTextSize(TypedValue.COMPLEX_UNIT_SP, oTextSize * 3);
-                    super.setBackgroundColor(Color.argb(0, 0, 0, 0));
-                } else {
-                    super.setTextSize(TypedValue.COMPLEX_UNIT_SP, oTextSize);
-                }
+        // Make emoji BIGGER! If setting is enabled
+        if (prefs.getBoolean(SettingsFragment.SUPER_EMOJI, false) && mType == FontManager.TEXT_TYPE_PRIMARY) {
+            float oTextSize = FontManager.getTextSize(mContext, mType);
+            super.setTextSize(TypedValue.COMPLEX_UNIT_SP, oTextSize);
+            if (EmojiUtils.isOnlyEmoji(text)) {
+                this.isEmojiMessage = true;
+                Log.v(TAG, "Emoji-Only message detected! Content: '" + text + "'; make it super sized!");
+                super.setTextSize(TypedValue.COMPLEX_UNIT_SP, oTextSize * this.superEmojiScale);
+                super.setBackgroundColor(Color.TRANSPARENT);
             }
         }
 
@@ -199,7 +186,7 @@ public class QKTextView extends TextView implements LiveView {
         // Text size and color
         float fontSize = FontManager.getTextSize(mContext, mType);
         if (this.isEmojiMessage) {
-            fontSize = fontSize * 3;
+            fontSize = fontSize * this.superEmojiScale;
         }
         setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
         setTextColor(FontManager.getTextColor(mContext, mType));
